@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_apk:
+  build:
     name: Build APK (Debug)
     runs-on: ubuntu-latest
     steps:

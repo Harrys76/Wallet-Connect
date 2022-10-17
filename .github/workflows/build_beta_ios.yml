@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_ipa:
+  build:
     name: Build IPA (Debug)
     runs-on: macos-latest
     steps:

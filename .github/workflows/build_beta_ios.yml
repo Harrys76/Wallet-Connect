@@ -16,23 +16,22 @@ jobs:
       - run: flutter --version
       - run: flutter pub get
       - run: |
-          cd ios
-          rm podfile.lock
-          pod deintegrate
-          pod repo update
-          pod install
+      - run: cd ios
+      - run: rm podfile.lock
+      - run: pod deintegrate
+      - run: pod repo update
+      - run: pod install
 
       - run: flutter build ios --debug --no-codesign
 
       - name: Build and Generate IPA
-      - run: |
-          flutter build ios --debug --no-codesign
-          cd build/ios/iphoneos
-          mkdir Payload
-          cd Payload
-          ln -s ../Runner.app
-          cd ..
-          zip -r reku.ipa Payload
+      - run: flutter build ios --debug --no-codesign
+      - run: cd build/ios/iphoneos
+      - run: mkdir Payload
+      - run: cd Payload
+      - run: ln -s ../Runner.app
+      - run: cd ..
+      - run: zip -r reku.ipa Payload
 
       - name: The job has succeeded
         if: ${{  success() }}

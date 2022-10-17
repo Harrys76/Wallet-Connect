@@ -1,0 +1,45 @@
+name: Build Beta Environment
+on:
+  workflow_dispatch:
+
+jobs:
+  build_apk:
+    name: Build APK (Debug)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: flutter --version
+
+      - run: flutter build apk -t lib/main_dev.dart --debug
+
+      - name: The job has succeeded
+        if: ${{  success() }}
+        with:
+          message: |
+            ✅ BUILD SUCCESS
+            Developer: ${{ github.actor }}
+            Branch: ${{ github.ref_name }}
+            See changes: [Click here](https://github.com/${{ github.repository }}/commit/${{github.sha}})
+
+      - name: Distribute to firebase
+        if: ${{  success() }}
+        uses: wzieba/Firebase-Distribution-Github-Action@v1.3.5
+        with:
+          appId: ${{secrets.FIREBASE_APP_ID}}
+          token: ${{secrets.FIREBASE_TOKEN}}
+          groups: testers
+          file: build/app/outputs/flutter-apk/app-debug.apk
+          message: ✅ DISTRIBUTE SUCCESS
+
+      - name: The job has failed
+        if: ${{ failure() }}
+        with:
+          message: |
+            ❌ BUILD FAILED
+            Developer: ${{ github.actor }}
+            Branch: ${{ github.ref_name }}
+            See changes: [Click here](https://github.com/${{ github.repository }}/commit/${{github.sha}})

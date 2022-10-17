@@ -7,32 +7,33 @@ jobs:
     name: Build IPA (Debug)
     runs-on: macos-latest
     steps:
+      - name: Checkout Repo
       - uses: actions/checkout@v2
+      - name: Setup Flutter Env
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           architecture: x64
+      - name: Checkout Repo
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: flutter --version
       - run: flutter pub get
-      - run: |
-      - run: cd ios
-      - run: rm podfile.lock
-      - run: pod deintegrate
-      - run: pod repo update
-      - run: pod install
-
-      - run: flutter build ios --debug --no-codesign
-
+      - name: Pod install
+        run: |
+          cd ios
+          rm podfile.lock
+          pod deintegrate
+          pod repo update
+          pod install
       - name: Build and Generate IPA
-      - run: flutter build ios --debug --no-codesign
-      - run: cd build/ios/iphoneos
-      - run: mkdir Payload
-      - run: cd Payload
-      - run: ln -s ../Runner.app
-      - run: cd ..
-      - run: zip -r reku.ipa Payload
-
+        run: |
+          flutter build ios --debug --no-codesign
+          cd build/ios/iphoneos
+          mkdir Payload
+          cd Payload
+          ln -s ../Runner.app
+          cd ..
+          zip -r reku.ipa Payload
       - name: The job has succeeded
         if: ${{  success() }}
         with:
@@ -41,7 +42,6 @@ jobs:
             Developer: ${{ github.actor }}
             Branch: ${{ github.ref_name }}
             See changes: [Click here](https://github.com/${{ github.repository }}/commit/${{github.sha}})
-
       - name: Distribute to firebase
         if: ${{  success() }}
         uses: wzieba/Firebase-Distribution-Github-Action@v1.3.5
@@ -51,7 +51,6 @@ jobs:
           groups: rekuqa, rekuqaext
           file: build/ios/iphoneos/reku.ipa
           message: ✅ DISTRIBUTE SUCCESS
-
       - name: The job has failed
         if: ${{ failure() }}
         with:

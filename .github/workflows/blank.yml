@@ -1,0 +1,54 @@
+name: Build Beta Environment
+on:
+  workflow_dispatch:
+
+jobs:
+  build_ipa:
+    name: Build IPA (Debug)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          architecture: x64
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: flutter --version
+      - run: flutter pub get
+      - run: |
+          cd ios
+          rm podfile.lock
+          pod deintegrate
+          pod repo update
+          pod install
+
+      - run: flutter build ios --debug --no-codesign
+
+      - name: Build and Generate IPA
+      - run: |
+          flutter build ios --debug --no-codesign
+          cd build/ios/iphoneos
+          mkdir Payload
+          cd Payload
+          ln -s ../Runner.app
+          cd ..
+          zip -r reku.ipa Payload
+
+      - name: Distribute to firebase
+        if: ${{  success() }}
+        uses: wzieba/Firebase-Distribution-Github-Action@v1.3.5
+        with:
+          appId: ${{secrets.FIREBASE_APP_ID}}
+          token: ${{secrets.FIREBASE_TOKEN}}
+          groups: rekuqa, rekuqaext
+          file: build/ios/iphoneos/reku.ipa
+          message: ✅ DISTRIBUTE SUCCESS
+
+      - name: The job has failed
+        if: ${{ failure() }}
+        with:
+          message: |
+            ❌ BUILD FAILED
+            Developer: ${{ github.actor }}
+            Branch: ${{ github.ref_name }}
+            See changes: [Click here](https://github.com/${{ github.repository }}/commit/${{github.sha}})
